@@ -3,59 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fase 6: Alocação Estratégica</title>
+    <title>Fase 6: Blindagem Mobile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #020617; color: #fff; font-family: sans-serif; height: 100vh; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        body { 
+            background: #020617; color: #fff; font-family: sans-serif; 
+            height: 100vh; margin: 0; overflow: hidden; 
+            display: flex; flex-direction: column; align-items: center;
+            touch-action: none; /* Bloqueia o scroll da página inteira */
+        }
         
         .map-container { 
-            position: relative; width: 90vw; height: 50vh; 
-            background: rgba(30, 41, 59, 0.3); border: 2px dashed #3b82f6; 
-            border-radius: 20px; margin-top: 20px;
+            position: relative; width: 350px; height: 300px; 
+            background: rgba(30, 41, 59, 0.4); border: 2px dashed #3b82f6; 
+            border-radius: 20px; margin-top: 40px;
         }
 
         .area { 
-            position: absolute; width: 100px; height: 60px; 
+            position: absolute; width: 90px; height: 50px; 
             background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; 
-            border-radius: 10px; display: flex; align-items: center; 
+            border-radius: 8px; display: flex; align-items: center; 
             justify-content: center; font-size: 0.6rem; font-weight: bold; 
-            text-align: center; pointer-events: none;
+            text-align: center; pointer-events: none; transition: 0.3s;
         }
 
         .protected { 
-            background: rgba(34, 197, 94, 0.3) !important; 
-            border-color: #22c55e !important; color: #22c55e; 
+            background: rgba(34, 197, 94, 0.4) !important; 
+            border-color: #22c55e !important; color: #fff; 
         }
 
         .shield { 
             width: 60px; height: 60px; background: #3b82f6; 
             border-radius: 50%; display: flex; align-items: center; 
-            justify-content: center; font-size: 1.5rem; 
-            box-shadow: 0 0 15px #3b82f6; position: absolute; 
-            cursor: grab; touch-action: none; z-index: 100;
+            justify-content: center; font-size: 1.8rem; 
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); 
+            position: absolute; cursor: move;
+            touch-action: none; /* Importante para mobile */
+            z-index: 100;
         }
-        
-        #btn-next { position: fixed; bottom: 40px; }
+
+        #btn-next { margin-top: 40px; }
     </style>
 </head>
 <body>
 
-    <div class="text-center px-4">
-        <h2 class="text-xl font-bold text-blue-400 uppercase">Fase 6: Blindagem</h2>
-        <p class="text-[10px] text-slate-400 uppercase tracking-widest">Arraste os escudos para as áreas vermelhas</p>
+    <div class="text-center pt-10 px-6">
+        <h2 class="text-xl font-bold text-blue-400 uppercase tracking-tighter">Fase 6: Blindagem Final</h2>
+        <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-2">Arraste os escudos para as áreas de risco</p>
     </div>
 
     <div class="map-container" id="map">
-        <div class="area" style="top: 15%; left: 10%;" data-target="t1">LOGÍSTICA</div>
-        <div class="area" style="top: 50%; left: 35%;" data-target="t2">TRIBUTÁRIO</div>
-        <div class="area" style="top: 15%; right: 10%;" data-target="t3">DADOS (LGPD)</div>
+        <div class="area" style="top: 10%; left: 5%;" id="target-1">LOGÍSTICA</div>
+        <div class="area" style="top: 40%; left: 37%;" id="target-2">FISCAL</div>
+        <div class="area" style="top: 10%; right: 5%;" id="target-3">DADOS</div>
 
-        <div class="shield" id="s1" style="bottom: 10px; left: 15%;">🛡️</div>
-        <div class="shield" id="s2" style="bottom: 10px; left: 42%;">🛡️</div>
-        <div class="shield" id="s3" style="bottom: 10px; right: 15%;">🛡️</div>
+        <div class="shield" id="s1" style="top: 220px; left: 30px;">🛡️</div>
+        <div class="shield" id="s2" style="top: 220px; left: 145px;">🛡️</div>
+        <div class="shield" id="s3" style="top: 220px; right: 30px;">🛡️</div>
     </div>
 
-    <button id="btn-next" class="hidden bg-green-600 px-10 py-4 rounded-full font-bold shadow-lg animate-bounce" onclick="window.location.href='fase7.html'">GERAR CERTIFICADO →</button>
+    <button id="btn-next" class="hidden bg-green-600 text-white px-10 py-4 rounded-full font-bold shadow-xl animate-bounce" onclick="window.location.href='fase7.html'">FINALIZAR MISSÃO →</button>
 
     <script>
         let protectedCount = 0;
@@ -63,70 +70,90 @@
         const areas = document.querySelectorAll('.area');
 
         shields.forEach(shield => {
-            let offset = { x: 0, y: 0 };
-            let isDragging = false;
+            shield.addEventListener('touchstart', touchStart, {passive: false});
+            shield.addEventListener('touchmove', touchMove, {passive: false});
+            shield.addEventListener('touchend', touchEnd);
 
-            const startAction = (e) => {
-                isDragging = true;
-                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-                
-                const rect = shield.getBoundingClientRect();
-                offset.x = clientX - rect.left;
-                offset.y = clientY - rect.top;
-                shield.style.cursor = 'grabbing';
-            };
-
-            const moveAction = (e) => {
-                if (!isDragging) return;
-                e.preventDefault();
-                const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
-                shield.style.left = (clientX - offset.x) + 'px';
-                shield.style.top = (clientY - offset.y) + 'px';
-                shield.style.bottom = 'auto'; // Remove a trava do CSS original
-                shield.style.right = 'auto';
-            };
-
-            const endAction = (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                shield.style.cursor = 'grab';
-
-                // Verifica se caiu em cima de uma área
-                const sRect = shield.getBoundingClientRect();
-                const sCenterX = sRect.left + sRect.width / 2;
-                const sCenterY = sRect.top + sRect.height / 2;
-
-                areas.forEach(area => {
-                    const aRect = area.getBoundingClientRect();
-                    if (sCenterX > aRect.left && sCenterX < aRect.right &&
-                        sCenterY > aRect.top && sCenterY < aRect.bottom &&
-                        !area.classList.contains('protected')) {
-                        
-                        area.classList.add('protected');
-                        area.innerHTML = "🛡️ PROTEGIDO";
-                        shield.style.display = 'none';
-                        protectedCount++;
-                        
-                        if (protectedCount === 3) {
-                            document.getElementById('btn-next').classList.remove('hidden');
-                        }
-                    }
-                });
-            };
-
-            // Eventos de Mouse
-            shield.addEventListener('mousedown', startAction);
-            window.addEventListener('mousemove', moveAction);
-            window.addEventListener('mouseup', endAction);
-
-            // Eventos de Toque (Celular)
-            shield.addEventListener('touchstart', startAction, { passive: false });
-            window.addEventListener('touchmove', moveAction, { passive: false });
-            window.addEventListener('touchend', endAction);
+            // Suporte para mouse também
+            shield.addEventListener('mousedown', mouseDown);
         });
+
+        let currentShield = null;
+
+        function touchStart(e) {
+            currentShield = e.target;
+            e.preventDefault();
+        }
+
+        function touchMove(e) {
+            if (!currentShield) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const mapRect = document.getElementById('map').getBoundingClientRect();
+            
+            // Calcula a posição relativa ao container para não fugir da tela
+            let x = touch.clientX - mapRect.left - 30; // 30 é metade da largura do escudo
+            let y = touch.clientY - mapRect.top - 30;
+
+            currentShield.style.left = x + 'px';
+            currentShield.style.top = y + 'px';
+
+            checkCollision(currentShield);
+        }
+
+        function touchEnd(e) {
+            currentShield = null;
+        }
+
+        // Funções de Mouse (Desktop)
+        function mouseDown(e) {
+            currentShield = e.target;
+            document.onmousemove = mouseMove;
+            document.onmouseup = mouseUp;
+        }
+
+        function mouseMove(e) {
+            if (!currentShield) return;
+            const mapRect = document.getElementById('map').getBoundingClientRect();
+            let x = e.clientX - mapRect.left - 30;
+            let y = e.clientY - mapRect.top - 30;
+            currentShield.style.left = x + 'px';
+            currentShield.style.top = y + 'px';
+            checkCollision(currentShield);
+        }
+
+        function mouseUp() {
+            currentShield = null;
+            document.onmousemove = null;
+        }
+
+        function checkCollision(shield) {
+            const sRect = shield.getBoundingClientRect();
+            
+            areas.forEach(area => {
+                if (area.classList.contains('protected')) return;
+
+                const aRect = area.getBoundingClientRect();
+                
+                // Verifica se o escudo está sobre a área
+                const overlap = !(sRect.right < aRect.left || 
+                                  sRect.left > aRect.right || 
+                                  sRect.bottom < aRect.top || 
+                                  sRect.top > aRect.bottom);
+
+                if (overlap) {
+                    area.classList.add('protected');
+                    area.innerHTML = "🛡️ OK";
+                    shield.style.display = 'none';
+                    protectedCount++;
+                    
+                    if (protectedCount === 3) {
+                        document.getElementById('btn-next').classList.remove('hidden');
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>
