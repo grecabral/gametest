@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fase 5: A Decisão Final</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #020617; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        
+        /* Fundo de Sala de Reunião com Blur */
+        .bg-final {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(to bottom, rgba(2,6,23,0.8), rgba(2,6,23,0.9)), url('https://images.unsplash.com/photo-1517502884422-41eaadeff171?q=80&w=1920');
+            background-size: cover; background-position: center;
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            z-index: 10;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .btn-choice {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 18px;
+            border-radius: 12px;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 12px;
+            transition: 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-choice:hover { background: #2563eb; border-color: #fff; transform: translateX(5px); }
+
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="bg-final"></div>
+
+    <div class="glass-card text-center" id="main-card">
+        <div class="text-blue-500 text-xs font-bold tracking-[5px] mb-4 uppercase">Confronto Final</div>
+        <h1 class="text-2xl font-bold mb-6 text-white leading-tight">O Diretor pergunta: <br><span class="text-blue-300">"Como a Auditoria ajuda a empresa a crescer mais rápido?"</span></h1>
+        
+        <div id="options">
+            <button class="btn-choice" onclick="final(false)">
+                <b>A)</b> Criando processos de aprovação mais rigorosos para cada centavo gasto.
+            </button>
+            <button class="btn-choice" onclick="final(true)">
+                <b>B)</b> Antecipando riscos que causariam paradas, permitindo que a gestão acelere com segurança.
+            </button>
+            <button class="btn-choice" onclick="final(false)">
+                <b>C)</b> Garantindo que nenhum erro ocorra, mesmo que isso demore mais tempo.
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Sistema de Áudio (reutilizado)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSfx(f, type) {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = type; osc.frequency.value = f;
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 1);
+        }
+
+        function final(win) {
+            const card = document.getElementById('main-card');
+            
+            if (win) {
+                playSfx(600, 'sine');
+                card.innerHTML = `
+                    <div class="text-6xl mb-6">🤝</div>
+                    <h2 class="text-3xl font-bold text-green-500 mb-4 uppercase tracking-tighter">Parceria Confirmada!</h2>
+                    <p class="text-slate-300 mb-8 leading-relaxed">O Diretor compreendeu: Auditoria não é freio, é o <b>cinto de segurança</b> que permite ao carro andar mais rápido.</p>
+                    <button onclick="showStory()" class="bg-green-600 w-full py-4 rounded-xl font-bold shadow-lg">VER IMPACTO FINAL</button>
+                `;
+            } else {
+                playSfx(150, 'sawtooth');
+                card.innerHTML = `
+                    <div class="text-6xl mb-6">⚠️</div>
+                    <h2 class="text-2xl font-bold text-red-500 mb-4 uppercase">Visão Limitada</h2>
+                    <p class="text-slate-300 mb-8">O Diretor ainda vê a Auditoria como burocracia. A governança continuará sendo um gargalo.</p>
+                    <button onclick="location.reload()" class="bg-slate-700 w-full py-4 rounded-xl font-bold">TENTAR OUTRA ABORDAGEM</button>
+                `;
+            }
+        }
+
+        function showStory() {
+            document.getElementById('main-card').innerHTML = `
+                <h2 class="text-2xl font-bold text-blue-400 mb-6 uppercase italic">O Legado: Fala, Diretor!</h2>
+                <div class="text-left text-sm text-slate-300 space-y-4 leading-relaxed">
+                    <p>Ao completar este desafio, você provou que a <b>Governança Corporativa</b> e a <b>Auditoria</b> são as bases de uma empresa resiliente.</p>
+                    <p>O programa "Fala, Diretor!" agora é uma realidade, unindo quem audita e quem decide para proteger o valor da nossa organização.</p>
+                    <p class="text-blue-400 font-bold">Obrigado por sua dedicação estratégica!</p>
+                </div>
+                <button onclick="window.location.href='fase6.html'" class="mt-8 border border-white/20 w-full py-3 rounded-lg text-xs opacity-50 hover:opacity-100 transition">CONTINUAR</button>
+            `;
+        }
+    </script>
+</body>
+</html>

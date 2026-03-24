@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fase 3: Terminal de Governança</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #020617; color: #60a5fa; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .terminal { 
+            background: rgba(15, 23, 42, 0.95); border: 2px solid #1e3a8a; padding: 40px; border-radius: 5px; 
+            box-shadow: 0 0 50px rgba(30, 58, 138, 0.3); width: 100%; max-width: 450px; position: relative;
+        }
+        .scanline { width: 100%; height: 2px; background: rgba(59, 130, 246, 0.1); position: absolute; top: 0; left: 0; animation: scan 4s linear infinite; pointer-events: none; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        
+        input { 
+            background: #000; border: 1px solid #1e40af; color: #3b82f6; padding: 20px; width: 100%; 
+            text-align: center; font-size: 1.5rem; letter-spacing: 5px; outline: none; margin-bottom: 25px;
+            box-shadow: inset 0 0 10px #000;
+        }
+        .btn-enter { 
+            background: #1e40af; color: white; width: 100%; padding: 18px; font-weight: bold; 
+            cursor: pointer; border: none; transition: 0.3s; text-transform: uppercase;
+        }
+        .btn-enter:hover { background: #2563eb; box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    
+    <div class="terminal" id="terminal-box">
+        <h2 class="text-center mb-8 text-xs tracking-[5px] text-blue-300">SISTEMA DE AUDITORIA CRÍTICA</h2>
+        <p class="text-[10px] mb-2 opacity-50">DIGITE A CHAVE COLETADA NO ESCRITÓRIO:</p>
+        <input type="text" id="senhaInput" placeholder="********" maxlength="12" oninput="playBeep()">
+        <button class="btn-enter" onclick="validar()">EXECUTAR PROTOCOLO</button>
+        <p id="feedback" class="text-center mt-6 font-bold hidden"></p>
+    </div>
+
+    <script>
+        // Função para gerar sons sintéticos (Beep)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq, type, duration) {
+            const oscillator = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            oscillator.connect(gain);
+            gain.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function playBeep() { playSound(600, 'sine', 0.1); }
+        function playError() { playSound(150, 'sawtooth', 0.5); }
+        function playSuccess() { 
+            playSound(400, 'sine', 0.2);
+            setTimeout(() => playSound(600, 'sine', 0.2), 150);
+            setTimeout(() => playSound(800, 'sine', 0.4), 300);
+        }
+
+        function validar() {
+            const input = document.getElementById('senhaInput').value.toUpperCase();
+            const feedback = document.getElementById('feedback');
+            
+            if (input === '2027PARCERIA') {
+                playSuccess();
+                feedback.innerText = "ACESSO AUTORIZADO. DIRETORIA CONECTADA.";
+                feedback.className = "text-center mt-6 font-bold text-green-500 block animate-pulse";
+                
+                setTimeout(() => {
+    document.body.innerHTML = `
+        <div class="text-center p-10 bg-slate-900 border-2 border-green-500 rounded-lg shadow-[0_0_100px_rgba(34,197,94,0.2)]">
+            <h1 class="text-6xl mb-6">🤝</h1>
+            <h2 class="text-3xl font-bold text-white mb-4 italic">SISTEMA DESBLOQUEADO</h2>
+            <p class="text-green-400 mb-8 max-w-sm">Você recuperou os dados. Agora, vamos convencer a diretoria na Sala de Reuniões.</p>
+            
+            <button onclick="window.location.href='fase4.html'" class="bg-green-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-green-500 transition">
+                IR PARA A SALA DE REUNIÃO →
+            </button>
+        </div>
+    `;
+}, 1500);
+
+            } else {
+                playError();
+                feedback.innerText = "CHAVE INVÁLIDA. TENTE NOVAMENTE.";
+                feedback.className = "text-center mt-6 font-bold text-red-500 block";
+                document.getElementById('senhaInput').value = "";
+                setTimeout(() => feedback.classList.add('hidden'), 2000);
+            }
+        }
+    </script>
+</body>
+</html>

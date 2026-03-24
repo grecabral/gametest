@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fase 2: Corredor Escuro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; cursor: none; }
+        
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+
+        /* Camada 1: A Imagem de Fundo (Visão Baixa do Ambiente) */
+        .bg-corredor {
+            position: absolute; inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=1920');
+            background-size: cover; background-position: center;
+            z-index: 1;
+            /* Deixa a imagem base muito escura e com pouco contraste */
+            filter: brightness(0.02) contrast(0.8) blur(1px); 
+        }
+
+        /* Camada 2: A Lanterna (O Foco de Luz Nítido) */
+        /* Esta camada desenha a imagem real APENAS no círculo da lanterna */
+        .flashlight-focus {
+            position: absolute; inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=1920');
+            background-size: cover; background-position: center;
+            z-index: 2;
+            /* Recorta a imagem em um círculo nítido que segue o mouse */
+            -webkit-mask-image: radial-gradient(circle 180px at var(--x) var(--y), black 0%, black 70%, transparent 100%);
+            mask-image: radial-gradient(circle 180px at var(--x) var(--y), black 0%, black 70%, transparent 100%);
+            /* Aplica brilho e nitidez APENAS nesta área */
+            filter: brightness(1.1) contrast(1.1);
+        }
+
+        /* Camada 3: Brilho Suave da Luz (Opcional, para realismo) */
+        .light-glow {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle 200px at var(--x) var(--y), rgba(255,255,255,0.08) 0%, transparent 100%);
+            z-index: 3; pointer-events: none;
+        }
+
+        /* Ícones de Risco (z-index alto para ficar sobre a luz) */
+        .bug {
+            position: absolute; font-size: 50px;
+            cursor: pointer; z-index: 10;
+            filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.3));
+            opacity: 0.1; /* Quase invisíveis no escuro */
+            transition: opacity 0.2s, transform 0.2s, filter 0.3s;
+            user-select: none;
+        }
+        
+        /* Revelados pela Lanterna */
+        .bug.revealed { opacity: 1; filter: drop-shadow(0 0 25px #ef4444); transform: scale(1.1); }
+        .bug:active { transform: scale(0.9); }
+
+        /* UI */
+        .ui-top { position: absolute; top: 30px; width: 100%; text-align: center; z-index: 30; pointer-events: none; }
+        .status-box {
+            background: rgba(15, 23, 42, 0.95); border: 2px solid #3b82f6; color: #fff;
+            padding: 12px 30px; border-radius: 50px; font-weight: bold;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5); font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="bg-corredor"></div>
+        
+        <div class="flashlight-focus" id="focus-layer"></div>
+        
+        <div class="light-glow"></div>
+
+        <div class="ui-top">
+            <span class="status-box uppercase tracking-widest text-xs">
+                Neutralizar Riscos: <span id="count" class="text-blue-400 text-lg ml-2">0</span>/3
+            </span>
+        </div>
+
+        <div class="bug" style="top: 25%; left: 20%;" onclick="neutralizar(this)">⚠️</div>
+        <div class="bug" style="top: 65%; left: 48%;" onclick="neutralizar(this)">🚫</div>
+        <div class="bug" style="top: 35%; right: 18%;" onclick="neutralizar(this)">📉</div>
+    </div>
+
+    <script>
+        const container = document.getElementById('game-container');
+        const focusLayer = document.getElementById('focus-layer');
+        const bugs = document.querySelectorAll('.bug');
+        let neutralizados = 0;
+
+        function updatePosition(e) {
+            const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            
+            // Atualiza as variáveis CSS para o recorte da lanterna
+            container.style.setProperty('--x', x + 'px');
+            container.style.setProperty('--y', y + 'px');
+
+            // Verifica proximidade para revelar os bugs
+            bugs.forEach(bug => {
+                const rect = bug.getBoundingClientRect();
+                const bx = rect.left + rect.width / 2;
+                const by = rect.top + rect.height / 2;
+                const dist = Math.sqrt(Math.pow(x - bx, 2) + Math.pow(y - by, 2));
+
+                // O raio de revelação do bug coincide com o foco da lanterna
+                if (dist < 180) {
+                    bug.classList.add('revealed');
+                } else {
+                    bug.classList.remove('revealed');
+                }
+            });
+        }
+
+        window.addEventListener('mousemove', updatePosition);
+        window.addEventListener('touchmove', (e) => { updatePosition(e); e.preventDefault(); }, {passive: false});
+
+        function neutralizar(el) {
+            if (el.innerText === '✅') return;
+            
+            el.innerText = '✅';
+            el.style.filter = 'drop-shadow(0 0 30px #22c55e)';
+            el.style.opacity = '1';
+            
+            neutralizados++;
+            document.getElementById('count').innerText = neutralizados;
+
+            if (neutralizados === 3) {
+                setTimeout(() => {
+                    alert("CAMINHO ILUMINADO!\nAs falhas foram corrigidas. Siga para o Terminal.");
+                    window.location.href = 'fase3.html';
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>

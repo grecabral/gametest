@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fase 4: Filtro de Governança</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: sans-serif; overflow: hidden; height: 100vh; margin: 0; }
+        
+        /* Estilo das Bolhas */
+        .bubble { 
+            position: absolute; padding: 12px 20px; border-radius: 50px; cursor: pointer;
+            font-size: 0.85rem; font-weight: bold; transition: transform 0.1s;
+            white-space: nowrap; user-select: none; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+        .bubble:active { transform: scale(0.9); }
+        
+        /* Cores Dinâmicas */
+        .mito { background: #ef4444; border: 2px solid #b91c1c; color: white; }
+        .verdade { background: #22c55e; border: 2px solid #15803d; color: white; }
+        
+        /* Barra de Progresso no Topo */
+        #score-container { position: fixed; top: 0; left: 0; width: 100%; height: 8px; background: #1e293b; z-index: 50; }
+        #score-bar { height: 100%; width: 0%; background: #3b82f6; transition: width 0.4s ease; }
+        
+        .feedback-ui { position: fixed; top: 25px; right: 25px; font-family: monospace; color: #60a5fa; z-index: 50; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; }
+    </style>
+</head>
+<body onload="iniciarJogo()">
+
+    <div id="score-container"><div id="score-bar"></div></div>
+    <div class="feedback-ui">CONFIANÇA: <span id="pontos">0</span>%</div>
+
+    <div class="p-8 text-center relative z-20">
+        <h1 class="text-2xl font-black text-blue-500 uppercase tracking-tighter">O FILTRO DA VERDADE</h1>
+        <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Clique nas <span class="text-green-500">VERDADES</span>. Ignore os <span class="text-red-500">MITOS</span>.</p>
+    </div>
+
+    <div id="game-area" class="absolute inset-0 w-full h-full overflow-hidden"></div>
+
+    <script>
+        const gameArea = document.getElementById('game-area');
+        let score = 0;
+        const totalWin = 100;
+        let gameActive = true;
+
+        const frases = [
+            { t: "Auditoria previne riscos", v: true },
+            { t: "É só para punir", v: false },
+            { t: "Gera valor financeiro", v: true },
+            { t: "Burocracia inútil", v: false },
+            { t: "Transparência total", v: true },
+            { t: "Custo sem retorno", v: false },
+            { t: "Segurança jurídica", v: true },
+            { t: "Só foca no erro", v: false },
+            { t: "Parceria estratégica", v: true },
+            { t: "Monitoramento contínuo", v: true }
+        ];
+
+        // Áudio Sintético
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSfx(f, type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = type; osc.frequency.value = f;
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        }
+
+        function criarBolha() {
+            if (!gameActive) return;
+
+            const item = frases[Math.floor(Math.random() * frases.length)];
+            const b = document.createElement('div');
+            b.className = `bubble ${item.v ? 'verdade' : 'mito'}`;
+            b.innerText = item.t;
+            
+            // Posição horizontal aleatória
+            const startX = Math.random() * (window.innerWidth - 180);
+            b.style.left = startX + "px";
+            b.style.top = window.innerHeight + "px";
+            
+            gameArea.appendChild(b);
+
+            // Animação de subida (CSS não, via JS para controle total)
+            let pos = window.innerHeight;
+            const speed = 1.5 + Math.random() * 2;
+            
+            const anima = setInterval(() => {
+                if (!gameActive) { clearInterval(anima); b.remove(); return; }
+                pos -= speed;
+                b.style.top = pos + "px";
+                
+                if (pos < -100) {
+                    clearInterval(anima);
+                    b.remove();
+                    criarBolha(); // Cria outra para manter o fluxo
+                }
+            }, 10);
+
+            b.onclick = (e) => {
+                e.stopPropagation();
+                initAudio(); // Inicia áudio no primeiro clique
+                clearInterval(anima);
+                
+                if (item.v) {
+                    score += 20;
+                    playSfx(800, 'sine');
+                } else {
+                    score = Math.max(0, score - 15);
+                    playSfx(150, 'sawtooth');
+                }
+                
+                atualizarProgresso();
+                b.remove();
+                criarBolha();
+            };
+        }
+
+        function atualizarProgresso() {
+            document.getElementById('pontos').innerText = score;
+            document.getElementById('score-bar').style.width = Math.min(score, 100) + "%";
+            
+            if (score >= totalWin) {
+                gameActive = false;
+                setTimeout(() => {
+                    alert("CONFIANÇA ESTABELECIDA!\n\nA diretoria agora entende o valor real da Auditoria.");
+                    window.location.href = 'fase5.html';
+                }, 500);
+            }
+        }
+
+        function iniciarJogo() {
+            // Lança as primeiras 6 bolhas com atraso entre elas
+            for(let i=0; i<6; i++) {
+                setTimeout(criarBolha, i * 800);
+            }
+        }
+    </script>
+</body>
+</html>

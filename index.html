@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fase 1: Investigação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        #game-container { position: relative; width: 100vw; height: 100vh; background: #000; }
+        
+        .bg-image {
+            position: absolute; inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1920');
+            background-size: cover; background-position: center;
+            z-index: 1;
+        }
+
+        /* Camada dos Objetos */
+        .object-layer { position: absolute; inset: 0; z-index: 5; }
+        
+        .interactive-obj {
+            position: absolute; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center;
+            transition: transform 0.3s, filter 0.3s;
+            z-index: 6;
+        }
+
+        .interactive-obj:hover { transform: scale(1.1); filter: drop-shadow(0 0 20px #3b82f6); }
+
+        /* A Névoa (Canvas) */
+        #fog-canvas { 
+            position: absolute; inset: 0; 
+            z-index: 10; 
+            cursor: crosshair; 
+            touch-action: none;
+            background: transparent;
+        }
+
+        .instruction {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 20; color: white; background: rgba(0,0,0,0.8);
+            padding: 12px 25px; border-radius: 50px; font-size: 11px;
+            border: 1px solid #3b82f6; pointer-events: none;
+            letter-spacing: 2px; text-transform: uppercase;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="bg-image"></div>
+        
+        <div class="object-layer">
+            <div class="interactive-obj" style="top: 15%; left: 15%;" onclick="clicarPista('2027', 'EVIDÊNCIA: A projeção para 2027 é crítica!')">
+                <span style="font-size: 130px;">📊</span>
+            </div>
+
+            <div class="interactive-obj" style="top: 45%; right: 18%;" onclick="clicarPista('PARCERIA', 'EVIDÊNCIA: A chave do sistema é PARCERIA!')">
+                <span style="font-size: 80px;">💻</span>
+            </div>
+        </div>
+
+        <canvas id="fog-canvas"></canvas>
+
+        <div class="instruction">
+            Limpe a poeira e clique nos objetos revelados
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('fog-canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let achados = [];
+
+        // Função para garantir que o Canvas comece PREENCHIDO
+        function setupCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Desenha a névoa
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#1e293b'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Adiciona textura/texto na névoa
+            ctx.font = "bold 20px monospace";
+            ctx.fillStyle = "#334155";
+            ctx.textAlign = "center";
+            ctx.fillText("AMBIENTE BLOQUEADO", canvas.width/2, canvas.height/2);
+
+            // Prepara para o modo borracha
+            ctx.globalCompositeOperation = 'destination-out';
+        }
+
+        // Desenha a limpeza
+        function scrub(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, 100, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Eventos de Mouse
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; scrub(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mousemove', (e) => { if (isDrawing) scrub(e.clientX, e.clientY); });
+
+        // Eventos de Touch (Celular)
+        canvas.addEventListener('touchstart', (e) => { 
+            isDrawing = true; 
+            scrub(e.touches[0].clientX, e.touches[0].clientY); 
+        });
+        canvas.addEventListener('touchmove', (e) => { 
+            if (isDrawing) scrub(e.touches[0].clientX, e.touches[0].clientY);
+            e.preventDefault();
+        }, { passive: false });
+
+        // Lógica de Coleta
+        function clicarPista(id, msg) {
+            if(!achados.includes(id)) {
+                achados.push(id);
+                alert(msg);
+                if(achados.length >= 2) {
+                    alert("MISSÃO: Evidências coletadas. Siga para o corredor!");
+                    window.location.href = 'fase2.html';
+                }
+            }
+        }
+
+        // REPARO TÉCNICO: Repassar clique do Canvas para o Objeto
+        canvas.addEventListener('click', (e) => {
+            canvas.style.pointerEvents = 'none';
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+            canvas.style.pointerEvents = 'auto';
+            if (el && el.closest('.interactive-obj')) {
+                el.closest('.interactive-obj').click();
+            }
+        });
+
+        // Inicia e garante o resize
+        window.addEventListener('load', setupCanvas);
+        window.addEventListener('resize', setupCanvas);
+    </script>
+</body>
+</html>

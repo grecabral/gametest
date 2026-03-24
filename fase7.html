@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fase 7: O Pacto de Governança</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #f8fafc; color: #1e293b; font-family: serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .certificate { background: white; width: 600px; padding: 60px; border: 15px double #1e293b; position: relative; box-shadow: 0 50px 100px rgba(0,0,0,0.1); text-align: center; }
+        canvas { border-bottom: 2px solid #334155; cursor: crosshair; margin-top: 20px; }
+        .seal { position: absolute; bottom: 40px; right: 40px; width: 80px; opacity: 0.2; }
+    </style>
+</head>
+<body>
+
+    <div class="certificate">
+        <h1 class="text-3xl font-bold uppercase mb-2">Certificado de Excelência</h1>
+        <p class="italic text-lg mb-8">O programa "Fala, Diretor!" reconhece o compromisso com a</p>
+        <h2 class="text-4xl font-black text-blue-900 mb-10 tracking-widest uppercase">Governança Estratégica</h2>
+        
+        <p class="text-xs uppercase tracking-widest mb-2">Assine abaixo para selar o compromisso:</p>
+        <canvas id="sig-canvas" width="400" height="100"></canvas>
+        
+        <div class="mt-10">
+            <button class="bg-blue-900 text-white px-8 py-3 rounded uppercase text-xs font-bold" onclick="finalizar()">Finalizar Jornada</button>
+        </div>
+        <img src="https://cdn-icons-png.flaticon.com/512/3665/3665910.png" class="seal">
+    </div>
+
+    <script>
+        const canvas = document.getElementById('sig-canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        canvas.onmousedown = () => drawing = true;
+        window.onmouseup = () => drawing = false;
+        canvas.onmousemove = (e) => {
+            if (!drawing) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#1e3a8a';
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke(); ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        };
+
+        function finalizar() {
+            alert("PACTO SELADO.\n\nA auditoria e a diretoria agora caminham juntas.");
+            location.href = 'index.html'; // Volta ao início
+        }
+    </script>
+</body>
+</html>
