@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoria: A Missão da Governança</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background: #000; color: #facc15; 
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; 
+            margin: 0; overflow: hidden; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #starfield {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: 1;
+        }
+
+        .crawl-container {
+            position: relative;
+            width: 98%; max-width: 1100px; 
+            height: 100vh;
+            perspective: 450px; 
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .crawl-text {
+            position: absolute;
+            top: 100%; 
+            width: 100%;
+            text-align: justify;
+            transform-origin: 50% 100%;
+            transform: rotateX(25deg); 
+            animation: crawl 60s linear forwards; 
+        }
+
+        @keyframes crawl {
+            0% { top: 100%; transform: rotateX(25deg) translateZ(0); }
+            100% { top: -280%; transform: rotateX(25deg) translateZ(-1200px); opacity: 0; }
+        }
+
+        h1.main-title { 
+            font-size: 5.5rem; text-align: center; margin-bottom: 60px; 
+            color: #facc15; font-weight: 900; letter-spacing: 5px;
+            text-shadow: 0 0 20px #facc15; line-height: 1;
+        }
+        
+        h2.episode { 
+            font-size: 2.5rem; text-align: center; margin-bottom: 20px; 
+            font-weight: bold; color: #60a5fa;
+        }
+
+        p.content { 
+            font-size: 3rem; line-height: 1.5; margin-bottom: 60px; 
+            font-weight: 700; color: #facc15;
+            text-transform: none; /* Removido o uppercase */
+        }
+
+        /* Botões de Controle */
+        .controls {
+            position: fixed; bottom: 30px; right: 30px; z-index: 20;
+            display: flex; gap: 10px;
+        }
+
+        .btn-ui {
+            background: rgba(0,0,0,0.8); border: 2px solid #facc15; color: #facc15;
+            padding: 12px 25px; border-radius: 5px; font-weight: bold;
+            cursor: pointer; transition: 0.3s; font-size: 0.9rem;
+        }
+        .btn-ui:hover { background: #facc15; color: #000; }
+
+        #mute-btn { border-color: #ef4444; color: #ef4444; }
+        #mute-btn.active { background: #ef4444; color: #000; }
+
+        #audio-tip {
+            position: fixed; top: 20px; left: 20px; color: rgba(250, 204, 21, 0.4);
+            font-size: 11px; z-index: 30; pointer-events: none; letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body onclick="initAudio()">
+
+    <div id="audio-tip">CLIQUE NA TELA PARA ATIVAR O SOM SOMBRIO</div>
+    <canvas id="starfield"></canvas>
+
+    <audio id="theme-music" loop>
+        <source src="https://www.chosic.com/wp-content/uploads/2021/07/The-Old-Tower-Window.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="crawl-container">
+        <div class="crawl-text">
+            <h2 class="episode">Episódio I</h2>
+            <h1 class="main-title">A Ameaça Oculta</h1>
+            
+            <p class="content">A corporação vive dias sombrios. Relatórios vitais sumiram e a desinformação impera pelos corredores técnicos de toda a organização.</p>
+            
+            <p class="content">Sem a luz da governança, os departamentos agem às cegas, acumulando riscos silenciosos que ameaçam a estrutura fundamental do negócio.</p>
+            
+            <p class="content">Você é o agente da auditoria. Sua missão é penetrar no caos, coletar evidências ocultas e blindar a organização antes que o colapso ocorra.</p>
+            
+            <p class="content">O destino da transparência está em suas mãos. Que a clareza dos dados esteja com você neste desafio...</p>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="mute-btn" class="btn-ui" onclick="toggleMute(event)">🔇 MUDO</button>
+        <button class="btn-ui" onclick="window.location.href='fase1.html'">INICIAR MISSÃO →</button>
+    </div>
+
+    <script>
+        const music = document.getElementById('theme-music');
+        const muteBtn = document.getElementById('mute-btn');
+        let audioStarted = false;
+
+        function initAudio() {
+            if (!audioStarted) {
+                music.play().catch(e => console.log("Aguardando interação..."));
+                audioStarted = true;
+                document.getElementById('audio-tip').style.opacity = '0';
+            }
+        }
+
+        function toggleMute(event) {
+            event.stopPropagation(); // Impede o clique de disparar o initAudio de novo
+            if (music.muted) {
+                music.muted = false;
+                muteBtn.innerText = "🔇 MUDO";
+                muteBtn.classList.remove('active');
+            } else {
+                music.muted = true;
+                muteBtn.innerText = "🔊 SOM";
+                muteBtn.classList.add('active');
+            }
+        }
+
+        // Sistema de Estrelas
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let width, height, stars = [];
+        const numStars = 900;
+        const speed = 0.45;
+
+        function setCanvasSize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initStars();
+        }
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * width - width / 2,
+                    y: Math.random() * height - height / 2,
+                    z: Math.random() * width,
+                    o: Math.random() * 0.8 + 0.2
+                });
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+            for (let i = 0; i < numStars; i++) {
+                let star = stars[i];
+                star.z -= speed;
+                if (star.z <= 0) {
+                    star.z = width;
+                    star.x = Math.random() * width - width / 2;
+                    star.y = Math.random() * height - height / 2;
+                }
+                const p = width / star.z;
+                const x = star.x * p + width / 2;
+                const y = star.y * p + height / 2;
+                const s = (1 - star.z / width) * 2.8;
+
+                if (x >= 0 && x <= width && y >= 0 && y <= height) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.o})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, s, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', setCanvasSize);
+        setCanvasSize();
+        animate();
+    </script>
+</body>
+</html>
